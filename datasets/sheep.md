@@ -1,10 +1,10 @@
 ## Sheep data download
-1. Create the required directories  
-    a. If you are working with sheep data, create a directory named "sheep" in your home directory.    
+1. Create the **default** working directory and its sub-directories.   
+    a. Create a directory named "sheep" as your default working directory.    
  	```   
     mkdir sheep
  	```   
-    b. In the "sheep" directory, create two sub-directories, "data" and "module" (see Fig. 1).    
+    b. In the "sheep" directory, create a sub-directory, "data" (see Fig. 1).    
  	```   
     cd sheep
    	```
