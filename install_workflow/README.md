@@ -104,8 +104,8 @@ We have provided three example use cases based on the human dataset to guide you
     ```  
     python pipeline3.py human GRCh38_full_analysis_set_plus_decoy_hla.fa 16 null list_human    
     ```
- Note: You will need to prepare a text file titled list_human. Inside this file, list the sample names you wish to process, separated by spaces (e.g., HG00096 HG00097 HG00098).    
- Note: Once the process is complete, you can find your output VCF files in the **db/** directory.    
+    **Note** : You will need to prepare a text file titled list_human. Inside this file, list the sample names you wish to process, separated by spaces (e.g., HG00096 HG00097 HG00098).    
+    **Note** : Once the process is complete, you can find your output VCF files in the **db/** directory.    
  
 - ##### Case 2: Variant Calling with an dbSNP    
     ```  
