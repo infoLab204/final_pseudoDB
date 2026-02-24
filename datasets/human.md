@@ -1,25 +1,26 @@
 ## Human Data download
-1.	Create the default working directory and its sub-directories
-    a. Create a directory named "human" as your default working directory.
-  	 	```   
-		    mkdir human
-  	 	```   
-    b. In the "human" directory, create a sub-directory, "data" (see Fig. 1).
-  	 	```   
-		    cd human    
-  	 	```
-  	 	```   
-        mkdir data    
-  	 	```   
-    c. Go to the "data" directory and create the three sub-directories: "fastq", "ref", and "db" (see Fig. 1).
-  	 	```   
-	      cd data    
-  	 	```
-  	 	```   
-	      mkdir fastq ref db    
-  	 	```   
+1. Create the required directories  
+    a. 1.	Create the default working directory and its sub-directories.        
+ 	```   
+    mkdir human
+ 	```   
+    b. In the "human" directory, create a sub-directory, "data" (see Fig. 1).        
+ 	```   
+    cd human
+   	```
+   	```      
+    mkdir data 
+    ```   
+   
+    c. Go to the "data" directory and create the three sub-directories: "fastq", "ref", and "db" (see Fig. 1).    
+ 	```   
+    cd data
+   	```
+   	```       
+    mkdir fastq ref db
+    ```       
 
-2.	Go to the "fastq" directory and download FASTQ file.    
+3.	Go to the "fastq" directory and download FASTQ file.    
     (Note)  While you can process multiple samples for variant calling, this tutorial uses a single sample to keep the workflow simple.      <br>       
     a. Visit the website: https://www.internationalgenome.org/data-portal/sample.       <br>
   	
@@ -67,7 +68,7 @@
     zcat SRR062634_2.fastq.gz SRR062635_2.fastq.gz SRR062641_2.fastq.gz | gzip -c > HG00096_2.fastq.gz
     ```       
 
-3.	Go to the "ref" directory and download the reference sequence    
+4.	Go to the "ref" directory and download the reference sequence    
  	```   
     cd ref
    	```
@@ -75,7 +76,7 @@
     wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa    
    	```
     
-4.	Go to the "db" directory and download two variant databases: dbSNP and pseudoDB.  <br>
+5.	Go to the "db" directory and download two variant databases: dbSNP and pseudoDB.  <br>
     a.	Download dbSNP of human and assign a new name to it.   
  	```   
     wget https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz  
