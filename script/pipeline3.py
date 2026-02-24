@@ -132,7 +132,8 @@ def pseudo_db(species, reference_file, file_list):
         return
 
     # UnifiedGenotyper caller
-    output_vcf=f"{species}/data/db/{species}_pseudoDB.vcf.gz"
+    species_name=species.split('/')[-1] 
+    output_vcf=f"{species}/data/db/{species_name}_pseudoDB.vcf.gz"
     vcf_cmd=f"gatk -T UnifiedGenotyper -R {species}/data/ref/{reference_file} {sample_list_str} -o {output_vcf} --genotype_likelihoods_model BOTH"
     print(f"Start creating a psesudoDB with {len(sample_name)} samples")
     os.system(vcf_cmd)
@@ -145,8 +146,9 @@ def qs_recal(species, reference_file, dbtype, file_list) :
 
     with open(file_list, "r") as f:
         sample_list = [line.strip() for line in f if line.strip()]
- 
-    db_path=f"{species}/data/db/{species}_{dbtype}.vcf.gz"
+    
+    species_name=species.split('/')[-1] 
+    db_path=f"{species}/data/db/{species_name}_{dbtype}.vcf.gz"
     if not os.path.exists(db_path) :
         sys.exit(f"Not found database : {db_path}")		
     
@@ -161,8 +163,8 @@ def qs_recal(species, reference_file, dbtype, file_list) :
     
         machine_dir = f"{species}/module/machine"
         ref_path = f"{species}/data/ref/{reference_file}"
-        recal_table = f"{sample_name}_{dbtype}_recal.table"
-        output_bam = f"{sample_name}_{dbtype}_recalibrated.bam" 
+        recal_table = f"{machine_dir}/{sample_name}_{dbtype}_recal.table"
+        output_bam = f"{machine_dir}/{sample_name}_{dbtype}_recalibrated.bam" 
   
         # BaseRecalibrator
         os.system(f"gatk -T BaseRecalibrator -R {ref_path} -I {bam_path}  -knownSites {db_path} -o {recal_table} &> {recal_table}.log")
@@ -199,7 +201,8 @@ def variant_call(species, reference_file, dbtype, file_list):
         return
 
     # UnifiedGenotyper caller
-    output_vcf=f"{species}/module/variants/{species}_{dbtype}_variant_calling.vcf.gz"
+    species_name=species.split('/')[-1] 
+    output_vcf=f"{species}/module/variants/{species_name}_{dbtype}_variant_calling.vcf.gz"
     ref_path = f"{species}/data/ref/{reference_file}"
 
     vcf_cmd=f"gatk -T UnifiedGenotyper -R {ref_path} {sample_list_str} -o {output_vcf} --genotype_likelihoods_model BOTH &> {output_vcf}.log"
@@ -219,17 +222,18 @@ def error_rate(species, reference_file, dbtype, file_list) :
     with open(file_list, "r") as f:
         sample_list1 = [line.strip() for line in f if line.strip()]
 
-
-    database=f"{species}_{dbtype}.vcf.gz"
+    species_name=species.split('/')[-1]
+    database=f"{species_name}_{dbtype}.vcf.gz"
 
     ## database check
-    db_path=f"{species}/data/db/{species}_{dbtype}.vcf.gz"
+ 
+    db_path=f"{species}/data/db/{species_name}_{dbtype}.vcf.gz"
     if not os.path.exists(db_path) :
         sys.exit(f"Not found database : {db_path}")		
     
    
     if database in vcf_list and ".gz" in database :
-        os.system(f"zcat {db_path} > {species}/data/db/{species}_{dbtype}.vcf")
+        os.system(f"zcat {db_path} > {species}/data/db/{species_name}_{dbtype}.vcf")
    
     database=database[:database.find(".gz")]
 
@@ -301,12 +305,12 @@ def error_rate(species, reference_file, dbtype, file_list) :
    
         ## database unique position check
         db_name=f"{species}/data/db/{database}"
-        db_uniq_check=f"{species}/data/db/{species}_{dbtype}_uniq_pos"
+        db_uniq_check=f"{species}/data/db/{species_name}_{dbtype}_uniq_pos"
 
         db_dir=f"{species}/data/db"
         db_list=os.listdir(db_dir)
         if db_uniq_check not in db_list :
-            snp_extract=f'grep -v "^#" {db_name}  | cut -f1,2 | uniq > {species}/data/db/{species}_{dbtype}_uniq_pos'    # database uniq position search
+            snp_extract=f'grep -v "^#" {db_name}  | cut -f1,2 | uniq > {species}/data/db/{species_name}_{dbtype}_uniq_pos'    # database uniq position search
             os.system(snp_extract)
     
         sample_uniq_check=f"{species}/module/error/{sample}_error_analysis_uniq_pos"
@@ -387,7 +391,7 @@ def error_rate(species, reference_file, dbtype, file_list) :
         rm_cmd=f"rm -rf {species}/module/error/{sample}_error_analysis"
         os.system(rm_cmd)
     
-        rm_cmd=f"rm -rf {species}/data/db/{species}_{dbtype}.vcf"
+        rm_cmd=f"rm -rf {species}/data/db/{species_name}_{dbtype}.vcf"
         os.system(rm_cmd)
 	
 	
@@ -511,15 +515,13 @@ def main() :
 
     species=os.getcwd()
     os.chdir(species)
-
-    
      
     # Create subdirectories under directory "module".
     set_wd(species)
 
     # Create file names for the alignment under directory "ref".
     pre_align(species, ref)
-
+    
     if dbtype.upper()=="NULL" :  # Generating a New Pseudo-Database
         # Align FASTQ file of single samples to the reference.
         align_fastq(species, ref, thread, pseudo_file)
@@ -528,7 +530,7 @@ def main() :
         pseudo_db(species, ref, pseudo_file ) 
     else :  
         # Align FASTQ file of single samples to the reference.
-        align_fastq(species, ref, thread, analysis_file)
+        #align_fastq(species, ref, thread, analysis_file)
 
         # Recalibrate base quality score from sample.
         qs_recal(species, ref, dbtype, analysis_file)
