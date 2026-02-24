@@ -431,13 +431,11 @@ def qs_model(species, dbtype, file_list) :
     with open(file_list, "r") as f:
         sample_list = [line.strip() for line in f if line.strip()]
 
-    
-    ref_path = f"{species}/data/ref/{reference_file}"
     for sample_name in sample_list :
         bam_path=f"{species}/module/machine/{sample_name}_{dbtype}_recalibrated.bam"
         sam_path=f"{species}/module/model/{sample_name}_{dbtype}_recalibrated.sam"
         if not os.path.exists(bam_path) :
-            print(f"\nWarning: Bam files missing for {sample}")
+            print(f"\nWarning: Bam files missing for {sample_name}")
             continue
 
         os.system(f"samtools view -h {bam_path} > {sam_path}")
@@ -563,7 +561,7 @@ def main() :
         #variant_call(species, ref, dbtype, analysis_file)
 
         # Estimate sample error rate.
-        error_rate(species,ref, dbtype, analysis_file)
+        #error_rate(species,ref, dbtype, analysis_file)
 
         # Estimate model-adjusted base quality score.
         qs_model(species, dbtype, analysis_file)
