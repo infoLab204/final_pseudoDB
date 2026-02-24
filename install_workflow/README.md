@@ -95,8 +95,8 @@ conda activate gatk3         # Activate the environment
 ```
 
 #### Running the Pipeline
-Execute the variant calling functions by following this command structure:
-**python pipeline3.py <species> <ref> <threads> <db_type> <list_of_samples>**    <br>
+Execute the variant calling functions by following this command structure:    
+**python pipeline3.py <species> <ref> <threads> <db_type> <list_of_samples>**   <br>
 
 We have provided three example use cases based on the human dataset to guide you.    
   
