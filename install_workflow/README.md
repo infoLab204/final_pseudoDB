@@ -84,7 +84,7 @@ Note on db_type Values:
 Note: Certain species may lack established dbSNP resources.
 
 #### GATK3 Workflow
-Navigate to your default working directory (e.g., human) and retrieve the `pipeline3.py` module from the github repository script/.    
+Navigate to your default working directory (e.g., human) and retrieve the pipeline3.py module from the github repository script/.    
  
 ```   
 curl -L -O https://raw.githubusercontent.com/infoLab204/pseudoDB/refs/heads/main/script/pipeline3.py  # download "pipeline3.py" module   
