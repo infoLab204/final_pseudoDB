@@ -1,5 +1,5 @@
 ## Brown bear data download
-1. Create the default working directory and its sub-directories.      
+1. Create the **default** working directory and its sub-directories.      
     a. Create a directory named "bear" as your default working directory.    
     ```   
     mkdir bear
