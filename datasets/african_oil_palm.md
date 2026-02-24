@@ -1,5 +1,5 @@
 ## African oil palm Data download
-1. Create the default working directory and its sub-directories.      
+1. Create the **default** working directory and its sub-directories.      
     a. Create a directory named "palm" as your default working directory.    
  	```   
     mkdir palm
