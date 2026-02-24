@@ -83,7 +83,7 @@ Note on db_type Values:
     3. **\<pseudoDB Name\>**: Use this when calling variants using a previously generated pseudo-database.    <br><br>
 Note: Certain species may lack established dbSNP resources.
 
-#### GATK3 Workflow
+### GATK3 Workflow
 Navigate to your default working directory (e.g., human) and retrieve the pipeline3.py module from the github repository script/.    
  
 ```   
@@ -94,9 +94,9 @@ curl -L -O https://raw.githubusercontent.com/infoLab204/pseudoDB/refs/heads/main
 conda activate gatk3         # Activate the environment    
 ```
 
-#### Running the Pipeline
+### Running the Pipeline
 Execute the variant calling functions by following this command structure:    
-#### python pipeline3.py \<species\> \<ref\> \<threads\> \<db_type\> \<list_of_samples\>   <br><br>
+### python pipeline3.py \<species\> \<ref\> \<threads\> \<db_type\> \<list_of_samples\>   <br><br>
 
 We have provided three example use cases based on the human dataset to guide you.    
   
