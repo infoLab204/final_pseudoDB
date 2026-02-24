@@ -34,7 +34,7 @@ source ~/.bashrc
 ### 2. Tool Installation
 This workflow is for pipelines requiring the GATK3 UnifiedGenotyper. Note that GATK3 requires manual registration due to licensing.    
 
-Copy the pseudoDB_env.yaml module from the **script/** repository to your **default** working directory (e.g., human).         
+Copy the **pseudoDB_env.yaml** from the **script/** repository to your **default** working directory (e.g., human).         
  
 ```   
 curl -L -O https://raw.githubusercontent.com/infoLab204/pseudoDB/refs/heads/main/script/pseudoDB_env.yaml   
@@ -115,7 +115,7 @@ Note on db_type Values:
 Note: Certain species may lack established dbSNP resources.
 
 ### GATK3 Workflow
-Copy the pipeline3.py module from the **script/** repository to your **default** working directory (e.g., human).         
+Copy the **pipeline3.py** module from the **script/** repository to your **default** working directory (e.g., human).         
  
 ```   
 curl -L -O https://raw.githubusercontent.com/infoLab204/pseudoDB/refs/heads/main/script/pipeline3.py   
