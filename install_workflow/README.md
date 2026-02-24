@@ -33,13 +33,15 @@ source ~/.bashrc
 
 ### 2. Tool Installation
 This workflow is for pipelines requiring the GATK3 UnifiedGenotyper. Note that GATK3 requires manual registration due to licensing.    
-#### option 1 : yaml 
-Copy the pseudoDB_env.py module from the **script/** repository to your **default** working directory (e.g., human).         
+
+Copy the pseudoDB_env.yaml module from the **script/** repository to your **default** working directory (e.g., human).         
  
 ```   
-curl -L -O https://raw.githubusercontent.com/infoLab204/pseudoDB/refs/heads/main/script/pseudoDB_env.py   
+curl -L -O https://raw.githubusercontent.com/infoLab204/pseudoDB/refs/heads/main/script/pseudoDB_env.yaml   
 ```   
- 
+``` 
+conda env create -f pseudoDB_env.yaml 
+``` 
 ```   
 conda activate gatk3         # Activate the environment    
 ```
@@ -61,7 +63,7 @@ rm -rf  GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2  gatk3.8
 ```
 <br>
 
-#### option 2 : 
+<!--
 ```   
 conda create -n gatk3        # Create a dedicated virtual environment    
 ```
@@ -96,6 +98,7 @@ gatk-register gatk3.8/GenomeAnalysisTK.jar
 ```  
 rm -rf  GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2  gatk3.8 
 ```
+-->
 <br><br>
 ## Section2: Variant Calling Workflow    
 This section details the execution of the variant calling pipeline. The workflow requires the following input parameters:  
