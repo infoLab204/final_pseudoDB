@@ -31,8 +31,8 @@ bash Anaconda3-2025.06-0-Linux-x86_64.sh
 source ~/.bashrc
 ```
 
-### 2. Tool Installation Options
-This workflow is for legacy pipelines requiring the GATK3 UnifiedGenotyper. Note that GATK3 requires manual registration due to licensing.
+### 2. Tool Installation
+This workflow is for pipelines requiring the GATK3 UnifiedGenotyper. Note that GATK3 requires manual registration due to licensing.    
    
 ```   
 conda create -n gatk3        # Create a dedicated virtual environment    
@@ -72,7 +72,7 @@ rm -rf  GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2  gatk3.8
 ## Section2: Variant Calling Workflow    
 This section details the execution of the variant calling pipeline. The workflow requires the following input parameters:  
 -	**species**: The target species name (refer to the species list in the dataset directory).
--	**ref**: The filename of the reference sequence file.
+-	**ref**: The filename of the reference sequence.   
 -	**thread**: The number of CPU threads to allocate for the process.
 - **db_type**: The specific database of known variants to be used (see "Note" below).     
 -	**sample**: The filename of the FASTQ data.    <br><br>
@@ -84,7 +84,7 @@ Note on db_type Values:
 Note: Certain species may lack established dbSNP resources.
 
 ### GATK3 Workflow
-Navigate to your default working directory (e.g., human) and retrieve the pipeline3.py module from the github repository script/.    
+Copy the pipeline3.py module from the script/ repository to your default working directory (e.g., human).         
  
 ```   
 curl -L -O https://raw.githubusercontent.com/infoLab204/pseudoDB/refs/heads/main/script/pipeline3.py  # download "pipeline3.py" module   
@@ -95,27 +95,28 @@ conda activate gatk3         # Activate the environment
 ```
 
 ### Running the Pipeline
-Execute the variant calling functions by following this command structure:    
-### python pipeline3.py \<species\> \<ref\> \<threads\> \<db_type\> \<list_of_samples\>   <br><br>
+Navigate to your default working directory (e.g., human) and execute the variant calling functions by following this command structure:        
+#### python pipeline3.py \<species\> \<ref\> \<threads\> \<db_type\> \<list_of_sample_files>   <br><br>
 
-We have provided three example use cases based on the human dataset to guide you.    
+We have provided three example use cases based on the human dataset to guide you.        
   
-- ##### Case 1: Generating a New Pseudo-Database
+- ##### Case 1: Generating a new Pseudo-Database    
     ```  
-    python pipeline3.py human GRCh38_full_analysis_set_plus_decoy_hla.fa 16 null sampleList_file.txt    
+    python pipeline3.py human GRCh38_full_analysis_set_plus_decoy_hla.fa 16 null list_human    
     ```
-  Note: Once the process is complete, you can find your output VCF files in the **db/** directory.       
-- ##### Case 2: Variant Calling with an Existing dbSNP
+ Note: You will need to prepare a text file titled list_human. Inside this file, list the sample names you wish to process, separated by spaces (e.g., HG00096 HG00097 HG00098).    
+ Note: Once the process is complete, you can find your output VCF files in the **db/** directory.    
+ 
+- ##### Case 2: Variant Calling with an dbSNP    
     ```  
-    python pipeline3.py human GRCh38_full_analysis_set_plus_decoy_hla.fa 16 dbSNP sampleList_file.txt      
+    python pipeline3.py human GRCh38_full_analysis_set_plus_decoy_hla.fa 16 dbSNP list_human      
     ```
-  Note: Once the process is complete, you can find your output VCF files in the **variants/** directory.
-- ##### Case 3: Variant Calling with a Custom Pseudo-Database 
+     	Note: Once the process is complete, you can find your output VCF files in the **variants/** directory.   
+- ##### Case 3: Variant Calling with a Pseudo-Database     
     ```  
-    python pipeline3.py human GRCh38_full_analysis_set_plus_decoy_hla.fa 16 pseudoDB sampleList_file.txt    
+    python pipeline3.py human GRCh38_full_analysis_set_plus_decoy_hla.fa 16 pseudoDB list_human       
     ```  
-    Note: Once the process is complete, you can find your output VCF files in the **variants/** directory.
-
+    Note: Once the process is complete, you can find your output VCF files in the **variants/** directory.    
 
 
 
