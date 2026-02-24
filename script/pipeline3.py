@@ -14,7 +14,7 @@ def set_wd(species) :
     # variants :  result of genetic variants
     sub_dirs=["align","machine","error","model","variants"]
     
-    print(f"Setting up directories for {species}...")
+    print(f"\nSetting up directories for {species}...")
     for sub in sub_dirs :
         full_path=os.path.join(path_dir,sub)
         os.makedirs(full_path, exist_ok=True)
@@ -40,10 +40,10 @@ def pre_align(species, reference_file) :
             missing_files.append(f)
 
     if not missing_files :
-        print(f"All reference files for {species} are ready.")
+        print(f"\nAll reference files for {species} are ready.")
         return
 
-    print(f"Missing {missing_files}: Starting indexing...")
+    print(f"\nMissing {missing_files}: Starting indexing...")
 
     ref_path=f"{species}/data/ref/{reference_file}"
     dict_file = f"{species}/data/ref/{reference_file[:reference_file.find('.f')]}.dict"
@@ -78,7 +78,7 @@ def align_fastq(species, reference_file, n_thread, file_list) :
 
 
     for sample_name in sample_list :         
-        print(f"--- Processing Sample: {sample_name} ---")
+        print(f"\n--- Processing Sample: {sample_name} ---")
     
         # mapping to reference
         r1 = f"{species}/data/fastq/{sample_name}_1.fastq.gz"
@@ -128,7 +128,7 @@ def pseudo_db(species, reference_file, file_list):
             missing_samples.append(sample)
 
     if missing_samples :
-        print(f"Warning: Bam files for the following samples are missing: {missing_samples}")
+        print(f"\nWarning: Bam files for the following samples are missing: {missing_samples}")
         return
 
     # UnifiedGenotyper caller
@@ -156,7 +156,7 @@ def qs_recal(species, reference_file, dbtype, file_list) :
         bam_path=f"{species}/module/align/{sample_name}_aligned.bam"
 
         if not os.path.exists(bam_path) :
-            print(f"Warning: Bam files missing for {sample_name}")
+            print(f"\nWarning: Bam files missing for {sample_name}")
             continue
     
         machine_dir = f"{species}/module/machine"
@@ -195,7 +195,7 @@ def variant_call(species, reference_file, dbtype, file_list):
             missing_samples.append(sample)
 
     if missing_samples :
-        print(f"Warning: Bam files for the following samples are missing: {missing_samples}")
+        print(f"\nWarning: Bam files for the following samples are missing: {missing_samples}")
         return
 
     # UnifiedGenotyper caller
@@ -204,7 +204,7 @@ def variant_call(species, reference_file, dbtype, file_list):
 
     vcf_cmd=f"gatk -T UnifiedGenotyper -R {ref_path} {sample_list_str} -o {output_vcf} --genotype_likelihoods_model BOTH &> {output_vcf}.log"
 
-    print(f"Start genetic variants calling  with {len(sample_name)} samples")
+    print(f"\nStart genetic variants calling  with {len(sample_name)} samples")
     os.system(vcf_cmd)
 
     # delete file
@@ -409,7 +409,7 @@ def qs_model(species, dbtype, file_list) :
         bam_path=f"{species}/module/machine/{sample_name}_{dbtype}_recalibrated.bam"
         sam_path=f"{species}/module/model/{sample_name}_{dbtype}_recalibrated.sam"
         if not os.path.exists(bam_path) :
-            print(f"Warning: Bam files missing for {sample}")
+            print(f"\nWarning: Bam files missing for {sample}")
             continue
 
         os.system(f"samtools view -h {bam_path} > {sam_path}")
@@ -478,7 +478,7 @@ def main() :
     thread=args.thread  # the number of CPU threads to allocate for the process
     """
     if len(sys.argv) < 6 : 
-        print("[Error] Insufficient arguments.")
+        print("\n[Error] Insufficient arguments.")
         print("python pipeline3.py <species> <ref> <threads> <db_type> <list_of_sample_files>")
         print("=" * 100)
         print("""
@@ -513,10 +513,9 @@ def main() :
     os.chdir(species)
 
     
-    """ 
+     
     # Create subdirectories under directory "module".
     set_wd(species)
-    """
 
     # Create file names for the alignment under directory "ref".
     pre_align(species, ref)
