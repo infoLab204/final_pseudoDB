@@ -1,6 +1,6 @@
 ## Human Data download
 1. Create the required directories  
-    a. 1.	Create the default working directory and its sub-directories.        
+    a. Create the default working directory and its sub-directories.        
  	```   
     mkdir human
  	```   
