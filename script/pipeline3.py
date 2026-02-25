@@ -6,7 +6,7 @@ import argparse
 # working directory 
 def set_wd(species) :
     path_dir=os.path.join(species,"module")
-    # module directory
+    # module
     # align : result of aligning FASTQ to reference resulting BAM
     # machine : result of recalibrating maching-provided base quality score
     # error : result of estimating sample error rate
@@ -318,7 +318,7 @@ def error_rate(species, reference_file, dbtype, file_list) :
             line=infile.readline()
             line_list=line.strip().split("\t")
 
-        os.system(f"rm -rf {species}/module/error/{sample}_error")
+        os.remove(f"{species}/module/error/{sample}_error")
         infile.close()
         outfile.close()
     
@@ -347,21 +347,18 @@ def error_rate(species, reference_file, dbtype, file_list) :
                 > {species}/module/error/{sample}_{dbtype}_analysis"   ## database and sample analysis file 
         os.system(sdiff_exe)
 
-        rm_cmd=f"rm -rf {species}/module/error/{sample}_error_analysis_uniq_pos"
-        os.system(rm_cmd)
+        os.remove(f"{species}/module/error/{sample}_error_analysis_uniq_pos")
 
         awk_cmd="awk '{if(NF==4) print $0;}'"
         sdiff_extract=f"{awk_cmd} {species}/module/error/{sample}_{dbtype}_analysis > {species}/module/error/{sample}_{dbtype}_common"
         os.system(sdiff_extract)
 
-        rm_cmd=f"rm -rf {species}/module/error/{sample}_{dbtype}_analysis"
-        os.system(rm_cmd)
+        os.remove(f"{species}/module/error/{sample}_{dbtype}_analysis")
 
         eff_variant=f"cut -f1,2 {species}/module/error/{sample}_{dbtype}_common  > {species}/module/error/{sample}_{dbtype}_variant_pos"
         os.system(eff_variant)
    
-        rm_cmd=f"rm -rf {species}/module/error/{sample}_{dbtype}_common"  
-        os.system(rm_cmd)
+        os.remove(f"{species}/module/error/{sample}_{dbtype}_common")
     
         sample_name=f"{species}/module/error/{sample}_error_analysis"
         eff_name=f"{species}/module/error/{sample}_{dbtype}_variant_pos"
@@ -403,25 +400,20 @@ def error_rate(species, reference_file, dbtype, file_list) :
 
         error_rate.write(f"{sample}\t{(mismatch_num-eff_num)/mismatch_num}")
 
-        rm_cmd=f"rm -rf {species}/module/error/{sample}_{dbtype}_variant_pos"
-        os.system(rm_cmd)
+        os.remove(f"{species}/module/error/{sample}_{dbtype}_variant_pos")
     
-        rm_cmd=f"rm -rf {species}/module/error/{sample}_mismatch"
-        os.system(rm_cmd)
+        os.remove(f"{species}/module/error/{sample}_mismatch")
     
-        rm_cmd=f"rm -rf {species}/module/error/{sample}_error_analysis"
-        os.system(rm_cmd)
+        os.remove(f"{species}/module/error/{sample}_error_analysis")
     
 	
         sample_infile.close()
         eff_infile.close()
         error_rate.close()
 
-    rm_cmd=f"rm -rf {species}/data/db/{species_name}_{dbtype}_uniq_pos"
-    os.system(rm_cmd)
+    os.remove(f"{species}/data/db/{species_name}_{dbtype}_uniq_pos")
 
-    rm_cmd=f"rm -rf {species}/data/db/{species_name}_{dbtype}.vcf"
-    os.system(rm_cmd)
+    os.remove(f"{species}/data/db/{species_name}_{dbtype}.vcf")
 	
 # end of error_rate()
 
