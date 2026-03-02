@@ -70,7 +70,7 @@ pseudoDB --species <SPECIES> --fasta <FASTA> --sample-list <SAMPLE_LIST> -output
 
 - `-db`, `--database` — Path to database VCF (`.vcf`, `.vcf.gz`). If omitted, the pipeline will run in pseudo-database construction mode
 - `-dn`, `--database-name` — Name used in output file naming. If not provided, will be derived by from the database filename
-- `-t`, `--threads` — Number of CPU threads passed to `bwa-mem2 mem` (default: `1`)
+- `-t`, `--threads` — Number of CPU threads passed to `bwa-mem2 mem`, `samtools faidx` (default: `1`)
 - `-sl`, `--softlink` — If set, input files are softlinked into the output directory instead of copied
 
 ## Examples (taken from `run_examples.sh`)
@@ -183,4 +183,78 @@ The pipeline is designed to be safely re-run on a partially completed output dir
 
 ## Threading
 
-The `-t` / `--threads` argument controls the number of CPU threads passed to `bwa-mem2 mem` only. All other tools are currently not affected by this flag and will use their own defaults.
+The `-t` / `--threads` argument controls the number of CPU threads passed to `bwa-mem2 mem` and `samtools faidx` only. All other tools are currently not affected by this flag and will use their own defaults.
+
+## Links to Dataset Examples
+
+1. Human
+
+    - Example FASTQ     : https://www.internationalgenome.org/data-portal/sample (e.g. HG00096)
+    - Reference FASTA   : http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+    - dbSNP             : https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz
+    - pseudoDB          : https://zenodo.org/record/7488070/files/human_pseudoDB.vcf.gz
+
+2. African Oil Palm
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJEB21246 (e.g. ERR2004436)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/442/705/GCF_000442705.1_EG5/GCF_000442705.1_EG5_genomic.fna.gz
+    - dbSNP             : https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_8/by_species/elaeis_guineensis/EG5/51953_GCA_000442705.1_current_ids.vcf.gz
+    - pseudoDB          : https://zenodo.org/record/18437285/files/palm_pseudoDB.vcf.gz
+
+3. Brown Bear
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJNA1139383 (e.g. SRR29938644)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/023/065/955/GCF_023065955.2_UrsArc2.0/GCF_023065955.2_UrsArc2.0_genomic.fna.gz
+    - dbSNP             : N/A
+    - pseudoDB          : https://zenodo.org/record/18437343/files/bear_pseudoDB.vcf.gz
+
+4. Cattle
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJNA238491 (e.g. SRR1293227)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/003/055/GCF_000003055.6_Bos_taurus_UMD_3.1.1/GCF_000003055.6_Bos_taurus_UMD_3.1.1_genomic.fna.gz
+    - dbSNP             : https://ftp.ncbi.nih.gov/snp/organisms/archive/cow_9913/VCF/00-All.vcf.gz
+    - pseudoDB          : https://zenodo.org/record/18333082/files/cattle_pseudoDB.vcf.gz
+
+5. Chickpea
+
+    - Example FASTQ     : https://db.cngb.org/search/project/CNP0000370/ (e.g. SRR5183095)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/genbank/plant/Cicer_arietinum/all_assembly_versions/GCA_000331145.1_ASM33114v1/GCA_000331145.1_ASM33114v1_genomic.fna.gz
+    - dbSNP             : https://ftp.ncbi.nih.gov/snp/organisms/archive/chickpea_3827/VCF
+    - pseudoDB          : https://zenodo.org/record/7487929/files/chickpea_pseudoDB.vcf.gz
+
+6. Komodo Dragon
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJNA738464 (e.g. SRR14830854)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/004/798/865/GCF_004798865.1_ASM479886v1/GCF_004798865.1_ASM479886v1_genomic.fna.gz
+    - dbSNP             : N/A
+    - pseudoDB          : https://zenodo.org/record/18437361/files/komodo_pseudoDB.vcf.gz
+
+7. Rice
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJEB6180 (e.g. SAMEA2569416/IRIS_313-10889)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/genbank/plant/Oryza_sativa/all_assembly_versions/GCA_001433935.1_IRGSP-1.0/GCA_001433935.1_IRGSP-1.0_genomic.fna.gz
+    - dbSNP             : https://ftp.ncbi.nih.gov/snp/organisms/archive/rice_4530/VCF/00-All.vcf.gz
+    - pseudoDB          : https://zenodo.org/record/7488383/files/rice_pseudoDB.vcf.gz
+
+8. Sheep
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJNA160933 (e.g. SRR501898)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/genbank/vertebrate_mammalian/Ovis_aries/latest_assembly_versions/GCA_000298735.2_Oar_v4.0/GCA_000298735.2_Oar_v4.0_genomic.fna.gz
+    - dbSNP             : https://ftp.ncbi.nih.gov/snp/organisms/archive/sheep_9940/VCF/00-All.vcf.gz
+    - pseudoDB          : https://zenodo.org/record/7488425/files/sheep_pseudoDB.vcf.gz
+
+9. Stevia
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJNA684944 (e.g. SRR13325728)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/009/936/405/GCA_009936405.2_ASM993640v2/GCA_009936405.2_ASM993640v2_genomic.fna.gz
+    - dbSNP             : N/A
+    - pseudoDB          : https://zenodo.org/record/18437378/files/stevia_pseudoDB.vcf.gz
+
+10. Swan Goose
+
+    - Example FASTQ     : https://www.ebi.ac.uk/ena/browser/view/PRJNA722049 (e.g. SRR14534354)
+    - Reference FASTA   : https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/002/166/845/GCF_002166845.1_GooseV1.0/GCF_002166845.1_GooseV1.0_genomic.fna.gz
+    - dbSNP             : https://ftp.ebi.ac.uk/pub/databases/eva/rs_releases/release_8/by_species/anser_cygnoides/GooseV1.0/8845_GCA_002166845.1_current_ids.vcf.gz
+    - pseudoDB          : https://zenodo.org/record/18437393/files/goose_pseudoDB.vcf.gz
+
+For more information on how to download these samples, please refer to instructions in [legacy/datasets](./legacy/datasets).
