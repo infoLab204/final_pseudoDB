@@ -70,7 +70,8 @@ pseudoDB --species <SPECIES> --fasta <FASTA> --sample-list <SAMPLE_LIST> -output
 
 - `-db`, `--database` — Path to database VCF (`.vcf`, `.vcf.gz`). If omitted, the pipeline will run in pseudo-database construction mode
 - `-dn`, `--database-name` — Name used in output file naming. If not provided, will be derived by from the database filename
-- `-t`, `--threads` — Number of CPU threads passed to `bwa-mem2 mem`, `samtools faidx` (default: `1`)
+- `-t`, `--threads` — Number of CPU threads passed to compatible tools (default: `8`)
+- `-m`, `--memory` - Memory limit (GB) passed to compatible tools (default: `16`)
 - `-sl`, `--softlink` — If set, input files are softlinked into the output directory instead of copied
 
 ## Examples (taken from `run_examples.sh`)
@@ -179,13 +180,25 @@ The pipeline is designed to be safely re-run on a partially completed output dir
 - **Reference indexing**: skipped if all index files already exist.
 - **Alignment**: per-sample, skipped if `<SAMPLE_NAME>_aligned.bam` already exists in `module/align/`.
 - **Base recalibration**: per-sample, skipped if `<SAMPLE_NAME>_<DB_NAME>_recalibrated.bam` already exists in `module/machine/`.
-- **Variant calling** and **error rate**: not resumable at the per-sample level — will re-run in full if called.
+- **Variant calling** and **error rate**: not resumable at the per-sample level, will re-run in full if called.
 
-## Threading
+## Threading and Memory
 
-The `-t` / `--threads` argument controls the number of CPU threads passed to `bwa-mem2 mem` and `samtools faidx` only. All other tools are currently not affected by this flag and will use their own defaults.
+The `-t` / `--threads` argument controls the number of CPU threads passed to compatible tools:
+
+- `BWA MEM`
+- GATK 3: `UnifiedGenotyper`
+
+The `-m` / `--memory` argument controls the memory limit passed to compatible tools (in GB):
+
+- PICARD: `CreateSequenceDictionary`, `SortSam`, `MarkDuplicates`
+- GATK 3: `UnifiedGenotyper`, `BaseRecalibrator`, `PrintReads`
+
+All other tools are currently not affected by these two arguments and will use their own defaults.
 
 ## Links to Dataset Examples
+
+This section lists example datasets for human and other species.
 
 1. Human
 

@@ -5,6 +5,11 @@ import shutil
 import argparse
 import subprocess
 
+# DEFAULTS
+THREAD_LIMIT_N = 8
+MEMORY_LIMIT_GB = 16
+# DEFAULTS
+
 def put_file(src, dest, softlink = False):
 	"""
 	Function to either copy files or create softlinks.
@@ -176,12 +181,13 @@ def set_wd(output_dir_path, sample_paths_file, src_fasta_path, src_database_path
 
 	return sample_dict, fasta_path, db_path
 
-def pre_align(fasta_path):
+def pre_align(fasta_path, gb_memory):
 	"""
 	Generate index files for reference FASTA.
 
 	Arguments:
 	- fasta_path: Path to the usable FASTA file (in data/ref).
+	- gb_memory: Memory limit for picard (GB).
 	"""
 	
 	ref_folder = os.path.dirname(fasta_path)
@@ -220,11 +226,11 @@ def pre_align(fasta_path):
 	subprocess.run(f"samtools faidx {fasta_path}", shell=True, check=True)
 
 	# 4. picard CreateSequenceDictionary
-	subprocess.run(f"picard CreateSequenceDictionary R={fasta_path} O={fasta_dict_path}", shell=True, check=True)
+	subprocess.run(f"picard -Xmx{gb_memory}g CreateSequenceDictionary R={fasta_path} O={fasta_dict_path}", shell=True, check=True)
 
 	print("Reference preprocessing completed successfully.")
 
-def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread):
+def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread, gb_memory):
 	"""
 	Align FASTQ file of single samples to the reference.
 
@@ -233,6 +239,7 @@ def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread):
 	- fasta_path: Path to FASTA file in data/ref.
 	- output_dir_path: Path for root output directory.
 	- n_thread: Number of threads passed to BWA MEM.
+	- gb_memory: Memory limit for picard (GB).
 	"""
 
 	module_align_dir = os.path.join(output_dir_path, "module", "align")
@@ -257,9 +264,9 @@ def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread):
 
 		# Mark Duplicate and Sort
 		os.makedirs(tmp_dir, exist_ok = True)
-		subprocess.run(f"picard SortSam I={init_sam_path} TMP_DIR={tmp_dir} O={sorted_sam_path} SORT_ORDER=coordinate", shell=True, check=True)
+		subprocess.run(f"picard -Xmx{gb_memory}g SortSam I={init_sam_path} TMP_DIR={tmp_dir} O={sorted_sam_path} SORT_ORDER=coordinate", shell=True, check=True)
 	
-		subprocess.run(f"picard MarkDuplicates I={sorted_sam_path} O={aligned_bam_path} M={metrics_txt_path} MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000 CREATE_INDEX=true", shell=True, check=True)
+		subprocess.run(f"picard -Xmx{gb_memory}g MarkDuplicates I={sorted_sam_path} O={aligned_bam_path} M={metrics_txt_path} MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000 CREATE_INDEX=true", shell=True, check=True)
 		
 		if os.path.exists(init_sam_path):
 			os.remove(init_sam_path)
@@ -270,7 +277,7 @@ def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread):
 		if os.path.exists(metrics_txt_path):
 			os.remove(metrics_txt_path)
 
-def pseudo_db(species_name, sample_list, fasta_path, output_dir_path):
+def pseudo_db(species_name, sample_list, fasta_path, output_dir_path, n_thread, gb_memory):
 	"""
 	Construct a pseudo database by using all samples in the align directory.
 
@@ -279,6 +286,8 @@ def pseudo_db(species_name, sample_list, fasta_path, output_dir_path):
 	- sample_list: List of sample names.
 	- fasta_path: Path to FASTA file in data/ref.
 	- output_dir_path: Path for root output directory.
+	- n_thread: Number of threads passed to GATK 3's UnifiedGenotyper.
+	- gb_memory: Memory limit for GATK 3's UnifiedGenotyper (GB).
 
 	Return:
 	- output_vcf_path: Path to output pseudoDB VCF file.
@@ -308,11 +317,11 @@ def pseudo_db(species_name, sample_list, fasta_path, output_dir_path):
 	
 	# UnifiedGenotyper caller
 	print(f"Start creating a pseudoDB with {len(sample_list_strs)} samples")
-	subprocess.run(f"gatk -T UnifiedGenotyper -R {fasta_path} {' '.join(sample_list_strs)} -o {output_vcf_path} --genotype_likelihoods_model BOTH", shell=True, check=True)
+	subprocess.run(f"gatk -Xmx{gb_memory}g -T UnifiedGenotyper -R {fasta_path} {' '.join(sample_list_strs)} -o {output_vcf_path} --genotype_likelihoods_model BOTH -nct {n_thread}", shell=True, check=True)
 
 	return output_vcf_path
 
-def qs_recal(sample_list, fasta_path, db_name, db_path, output_dir_path):
+def qs_recal(sample_list, fasta_path, db_name, db_path, output_dir_path, n_thread, gb_memory):
 	"""
 	Recalibrate base quality score from samples.
 
@@ -322,6 +331,8 @@ def qs_recal(sample_list, fasta_path, db_name, db_path, output_dir_path):
 	- db_name: Name of database VCF that will be used in output file names.
 	- db_path: Path to the database VCF.
 	- output_dir_path: Path for root output directory.
+	- n_thread: Number of threads passed to GATK 3's BaseRecalibrator and PrintReads.
+	- gb_memory: Memory limit for GATK 3's BaseRecalibrator and PrintReads (GB).
 	"""
 
 	module_align_dir = os.path.join(output_dir_path, "module", "align")
@@ -341,17 +352,17 @@ def qs_recal(sample_list, fasta_path, db_name, db_path, output_dir_path):
 				print(f"Warning: Aligned BAM file missing for {sample} (expected path: {aligned_bam_path}). Skipping.")
 			else:
 				# BaseRecalibrator
-				subprocess.run(f"gatk -T BaseRecalibrator -R {fasta_path} -I {aligned_bam_path}  -knownSites {db_path} -o {recal_table_path} &> {recal_table_path}.log", shell=True, check=True)
+				subprocess.run(f"gatk -Xmx{gb_memory}g -T BaseRecalibrator -nct {n_thread} -R {fasta_path} -I {aligned_bam_path}  -knownSites {db_path} -o {recal_table_path} &> {recal_table_path}.log", shell=True, check=True)
 
 				# PrintReads
-				subprocess.run(f"gatk -T PrintReads -R {fasta_path} -I {aligned_bam_path}  -BQSR {recal_table_path} -o {recalibrated_bam_path} &> {recalibrated_bam_path}.log", shell=True, check=True)
+				subprocess.run(f"gatk -Xmx{gb_memory}g -T PrintReads -nct {n_thread} -R {fasta_path} -I {aligned_bam_path}  -BQSR {recal_table_path} -o {recalibrated_bam_path} &> {recalibrated_bam_path}.log", shell=True, check=True)
 
 				# delete file
 				os.remove(f"{recal_table_path}")
 				os.remove(f"{recal_table_path}.log")
 				os.remove(f"{recalibrated_bam_path}.log")
 
-def variant_call(species_name, sample_list, fasta_path, db_name, output_dir_path):
+def variant_call(species_name, sample_list, fasta_path, db_name, output_dir_path, n_thread, gb_memory):
 	"""
 	Call genetic variants - step 1 : Call variants from each samples.
 
@@ -361,6 +372,8 @@ def variant_call(species_name, sample_list, fasta_path, db_name, output_dir_path
 	- fasta_path: Path to FASTA file in data/ref.
 	- db_name: Name of database VCF that will be used in output file names.
 	- output_dir_path: Path for root output directory.
+	- n_thread: Number of threads passed to GATK 3's UnifiedGenotyper.
+	- gb_memory: Memory limit for GATK 3's UnifiedGenotyper (GB).
 
 	Return:
 	- output_vcf: Path to resulting VCF file from variant calling.
@@ -390,7 +403,7 @@ def variant_call(species_name, sample_list, fasta_path, db_name, output_dir_path
 	output_vcf = os.path.join(module_variants_dir, f"{species_name}_{db_name}_variant_calling.vcf.gz")
 
 	print(f"Start genetic variants calling with {len(sample_list_strs)} samples")
-	subprocess.run(f"gatk -T UnifiedGenotyper -R {fasta_path} {' '.join(sample_list_strs)} -o {output_vcf} --genotype_likelihoods_model BOTH &> {output_vcf}.log", shell=True, check=True)
+	subprocess.run(f"gatk -Xmx{gb_memory}g -T UnifiedGenotyper -nct {n_thread} -R {fasta_path} {' '.join(sample_list_strs)} -o {output_vcf} --genotype_likelihoods_model BOTH &> {output_vcf}.log", shell=True, check=True)
 	
 	# delete file
 	os.remove(f"{output_vcf}.log")
@@ -640,7 +653,7 @@ def qs_model(sample_list, db_name, output_dir_path):
 
 	return module_model_dir
 
-def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_database_path = None, db_name = None, n_thread = 1, softlink = False):
+def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_database_path, db_name, n_thread, gb_memory, softlink):
 	sample_dict, fasta_path, db_path = set_wd(
 											output_dir_path = output_dir_path,
 											sample_paths_file = sample_paths_file,
@@ -650,12 +663,16 @@ def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_d
 										)
 	sample_list = list(sample_dict.keys())
 
-	pre_align(fasta_path = fasta_path)
+	pre_align(
+		fasta_path = fasta_path,
+		gb_memory = gb_memory
+	)
 	align_fastq(
 		sample_dict = sample_dict,
 		fasta_path = fasta_path,
 		output_dir_path = output_dir_path,
-		n_thread = n_thread
+		n_thread = n_thread,
+		gb_memory = gb_memory
 	)
 	
 	if src_database_path is None:
@@ -663,7 +680,9 @@ def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_d
 			species_name = species_name,
 			sample_list = sample_list,
 			fasta_path = fasta_path,
-			output_dir_path = output_dir_path
+			output_dir_path = output_dir_path,
+			n_thread = n_thread,
+			gb_memory = gb_memory
 		)
 	else:
 		db_name = db_name if db_name is not None else re.sub(r'\.(vcf|bcf)(\.gz)?$', '', os.path.basename(src_database_path))
@@ -673,7 +692,9 @@ def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_d
 			fasta_path = fasta_path,
 			db_name = db_name,
 			db_path = db_path,
-			output_dir_path = output_dir_path
+			output_dir_path = output_dir_path,
+			n_thread = n_thread,
+			gb_memory = gb_memory
 		)
 
 		vc_vcf_path = variant_call(
@@ -681,7 +702,9 @@ def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_d
 			sample_list = sample_list,
 			fasta_path = fasta_path,
 			db_name = db_name,
-			output_dir_path = output_dir_path
+			output_dir_path = output_dir_path,
+			n_thread = n_thread,
+			gb_memory = gb_memory
 		)
 		print(f"VCF result of variant-calling saved: {vc_vcf_path}")
 
@@ -704,14 +727,15 @@ def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_d
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-sp", "--species",			required=True,		type=str,	help=f"Target species name for output file naming.")
-	parser.add_argument("-fa", "--fasta",			required=True,		type=str,	help=f"Path to reference FASTA file.")
-	parser.add_argument("-s",  "--sample-list",		required=True,		type=str,	help=f"Path to file containing sample FASTQ paths.")
-	parser.add_argument("-o",  "--output-dir",		required=True,		type=str,	help=f"Path to output directory.")
-	parser.add_argument("-db", "--database",		default=None,		type=str,	help=f"Path to database VCF to use.")
-	parser.add_argument("-dn", "--database-name",	default=None,		type=str,	help=f"Name of database for output file naming.")
-	parser.add_argument("-t",  "--threads",			default=1,			type=int,	help=f"Number of CPU threads to use [1].")
-	parser.add_argument("-sl", "--softlink",		action="store_true",			help=f"Create softlinks instead of copying source input files into output directory.")
+	parser.add_argument("-sp", "--species",			required=True,				type=str,	help=f"Target species name for output file naming.")
+	parser.add_argument("-fa", "--fasta",			required=True,				type=str,	help=f"Path to reference FASTA file.")
+	parser.add_argument("-s",  "--sample-list",		required=True,				type=str,	help=f"Path to file containing sample FASTQ paths.")
+	parser.add_argument("-o",  "--output-dir",		required=True,				type=str,	help=f"Path to output directory.")
+	parser.add_argument("-db", "--database",		default=None,				type=str,	help=f"Path to database VCF to use.")
+	parser.add_argument("-dn", "--database-name",	default=None,				type=str,	help=f"Name of database for output file naming.")
+	parser.add_argument("-t",  "--threads",			default=THREAD_LIMIT_N,		type=int,	help=f"Number of CPU threads to pass to BWA MEM and GATK 3 (default: {THREAD_LIMIT_N}).")
+	parser.add_argument("-m",  "--memory",			default=MEMORY_LIMIT_GB,	type=int,	help=f"Memory limit in GB to pass to GATK 3 and Picard (default: {MEMORY_LIMIT_GB}).")
+	parser.add_argument("-sl", "--softlink",		action="store_true",					help=f"Create softlinks instead of copying source input files into output directory.")
 	args = parser.parse_args()
 
 	main(
@@ -722,5 +746,6 @@ if __name__ == "__main__":
 		src_database_path = args.database,
 		db_name = args.database_name,
 		n_thread = args.threads,
+		gb_memory = args.memory,
 		softlink = args.softlink
 	)
