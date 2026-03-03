@@ -1,0 +1,2 @@
+/data/HG00096_chr22_1.fastq.gz
+/data/HG00096_chr22_2.fastq.gz

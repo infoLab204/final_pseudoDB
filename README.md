@@ -5,12 +5,6 @@ This repository provides a comprehensive workflow, including configuration files
 ### Scientific Motivation
 This project establishes a transparent pipeline for the genetic variant discovery across diverse species using parameterized workflows and curated datasets. By making all code and results publicly available, we ensure the complete reproducibility of the analyses presented in our associated manuscript.
 
-### Reproducibility
-To facilitate ease of use and verification, this repository includes :
--	**Installation Guide**: Comprehensive instructions for setting up the required software environment.
--	**Workflow Scripts**: Fully documented scripts with pre-defined parameters.
--	**Validation Dataset**: Example datasets provided for testing and pipeline verification.
-
 ### Contact
 For inquiries regarding analytical methods, results, or technical support, please contact:
 -	**HyeonJung Lee** (hyeon@kaist.ac.kr)    
@@ -22,9 +16,11 @@ For inquiries regarding analytical methods, results, or technical support, pleas
 
 The [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) package manager is required to manage the pipeline environment. The pipeline and all its dependencies (Python 3, `bwa-mem2`, `samtools`, `picard`, `gatk`) are bundled into a conda environment defined in `pseudoDB_env.yaml'. To find the specific version of Conda compatible with your system, visit the Anaconda Archive at https://repo.anaconda.com/archive/.
 
-[Docker](https://www.docker.com) support is planned as an alternative to conda-based installation. This will allow the pipeline to be run in a fully self-contained container without requiring conda.
+Alternatively, the pipeline can also be run via [Docker](https://www.docker.com). Please visit https://docs.docker.com/engine/install for instructions on Docker installation.
 
 ## Installation
+
+### Conda
 
 Run `./install.sh` to prepare the conda environment and install the pseudoDB script. 
 
@@ -53,6 +49,14 @@ To test the installation, run `./run_examples.sh`.
 ./run_examples.sh
 ```
 
+### Docker
+
+Build Docker image:
+
+```bash
+docker build -t pseudodb:latest .
+```
+
 ## Usage
 
 ```bash
@@ -72,7 +76,7 @@ pseudoDB --species <SPECIES> --fasta <FASTA> --sample-list <SAMPLE_LIST> -output
 - `-dn`, `--database-name` — Name used in output file naming. If not provided, will be derived by from the database filename
 - `-t`, `--threads` — Number of CPU threads passed to compatible tools (default: `8`)
 - `-m`, `--memory` - Memory limit (GB) passed to compatible tools (default: `16`)
-- `-sl`, `--softlink` — If set, input files are softlinked into the output directory instead of copied
+- `-sl`, `--softlink` — If set, input files are softlinked into the output directory instead of copied.
 
 ## Examples (taken from `run_examples.sh`)
 
@@ -106,6 +110,25 @@ pseudoDB \
   --database ./example_data/chr22_pseudoDB.vcf.gz \
   --database-name pseudoDB
 ```
+
+For Docker-based installation, directories where input data files are saved will have to be mounted into the container. All input paths (`-fa`, `-s`, `-db`) and the output directory (`-o`) must then be under the mounted path so the container can access them. For more information, please visit https://docs.docker.com/engine/storage/bind-mounts.
+
+```bash
+docker run \
+  -v ./example_data:/data \
+  -v ./example_out:/output \
+  pseudodb \
+  -sp human_chr22 \
+  -fa /data/chr22.fa \
+  -s /data/sample_list_chr22.txt \
+  -o /output/docker_human_chr22_case1
+```
+
+Notes:
+- Remember to update the sample list to reflect paths inside the Docker container. For example, instead of `./example_data/data/SAMPLE_1.fastq.gz`, use `/data/SAMPLE_1.fastq.gz` (because `./example_data` is mounted to `/data`).
+- Remember to create the output directory (e.g. `./example_out`) before running the Docker container to avoid errors.
+- The `--softlink` (`-sl`) option will still work inside the Docker container. The only caveat is that symlinks created inside the container will not resolve correctly from the host after the container exits.
+- To use multiple CPU threads, ensure your Docker daemon is configured to allow sufficient CPU resources.
 
 ## Sample List File Format
 

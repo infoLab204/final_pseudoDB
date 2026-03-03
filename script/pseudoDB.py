@@ -352,10 +352,10 @@ def qs_recal(sample_list, fasta_path, db_name, db_path, output_dir_path, n_threa
 				print(f"Warning: Aligned BAM file missing for {sample} (expected path: {aligned_bam_path}). Skipping.")
 			else:
 				# BaseRecalibrator
-				subprocess.run(f"gatk -Xmx{gb_memory}g -T BaseRecalibrator -nct {n_thread} -R {fasta_path} -I {aligned_bam_path}  -knownSites {db_path} -o {recal_table_path} &> {recal_table_path}.log", shell=True, check=True)
+				subprocess.run(f"gatk -Xmx{gb_memory}g -T BaseRecalibrator -nct {n_thread} -R {fasta_path} -I {aligned_bam_path}  -knownSites {db_path} -o {recal_table_path} > {recal_table_path}.log 2>&1", shell=True, check=True)
 
 				# PrintReads
-				subprocess.run(f"gatk -Xmx{gb_memory}g -T PrintReads -nct {n_thread} -R {fasta_path} -I {aligned_bam_path}  -BQSR {recal_table_path} -o {recalibrated_bam_path} &> {recalibrated_bam_path}.log", shell=True, check=True)
+				subprocess.run(f"gatk -Xmx{gb_memory}g -T PrintReads -nct {n_thread} -R {fasta_path} -I {aligned_bam_path}  -BQSR {recal_table_path} -o {recalibrated_bam_path} > {recalibrated_bam_path}.log 2>&1", shell=True, check=True)
 
 				# delete file
 				os.remove(f"{recal_table_path}")
@@ -403,7 +403,7 @@ def variant_call(species_name, sample_list, fasta_path, db_name, output_dir_path
 	output_vcf = os.path.join(module_variants_dir, f"{species_name}_{db_name}_variant_calling.vcf.gz")
 
 	print(f"Start genetic variants calling with {len(sample_list_strs)} samples")
-	subprocess.run(f"gatk -Xmx{gb_memory}g -T UnifiedGenotyper -nct {n_thread} -R {fasta_path} {' '.join(sample_list_strs)} -o {output_vcf} --genotype_likelihoods_model BOTH &> {output_vcf}.log", shell=True, check=True)
+	subprocess.run(f"gatk -Xmx{gb_memory}g -T UnifiedGenotyper -nct {n_thread} -R {fasta_path} {' '.join(sample_list_strs)} -o {output_vcf} --genotype_likelihoods_model BOTH > {output_vcf}.log 2>&1", shell=True, check=True)
 	
 	# delete file
 	os.remove(f"{output_vcf}.log")
