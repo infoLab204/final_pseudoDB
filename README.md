@@ -14,7 +14,7 @@ For inquiries regarding analytical methods, results, or technical support, pleas
 
 ## Requirements
 
-The [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) package manager is required to manage the pipeline environment. The pipeline and all its dependencies (Python 3, `bwa-mem2`, `samtools`, `picard`, `gatk`) are bundled into a conda environment defined in `pseudoDB_env.yaml'. To find the specific version of Conda compatible with your system, visit the Anaconda Archive at https://repo.anaconda.com/archive/.
+The [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) package manager is required to manage the pipeline environment. The pipeline and all its dependencies (Python 3, `bwa-mem2`, `samtools`, `picard`, `gatk`) are bundled into a conda environment defined in `pseudoDB_env.yaml`. To find the specific version of Conda compatible with your system, visit the Anaconda Archive at https://repo.anaconda.com/archive/.
 
 Alternatively, the pipeline can also be run via [Docker](https://www.docker.com). Please visit https://docs.docker.com/engine/install for instructions on Docker installation.
 
@@ -51,10 +51,18 @@ To test the installation, run `./run_examples.sh`.
 
 ### Docker
 
-Build Docker image:
+Alternatively, you can also run pseudoDB via Docker. It still uses Conda to install and manage packages, but this approach minimizes dependency conflicts with your host system.
+
+To build the Docker image, run:
 
 ```bash
 docker build -t pseudodb:latest .
+```
+
+To test the installation, run `./run_examples_docker.sh`
+
+```bash
+./run_examples_docker.sh
 ```
 
 ## Usage
@@ -77,6 +85,28 @@ pseudoDB --species <SPECIES> --fasta <FASTA> --sample-list <SAMPLE_LIST> -output
 - `-t`, `--threads` — Number of CPU threads passed to compatible tools (default: `8`)
 - `-m`, `--memory` - Memory limit (GB) passed to compatible tools (default: `16`)
 - `-sl`, `--softlink` — If set, input files are softlinked into the output directory instead of copied.
+
+
+### Sample List File Format
+
+The file passed to `-s` must contain accessible paths to paired-end FASTQ files, one per line. Files must follow the naming pattern:
+
+```
+<SAMPLE_NAME>_1.<EXT>
+<SAMPLE_NAME>_2.<EXT>
+```
+
+Where `<EXT>` is one of: `.fastq`, `.fq`, `.fastq.gz`, `.fq.gz`.
+
+Both R1 and R2 files must be present for every sample. The pipeline will raise an error if any pair is incomplete.
+
+Example:
+```
+/data/samples/HG00096_1.fastq.gz
+/data/samples/HG00096_2.fastq.gz
+/data/samples/HG00097_1.fastq.gz
+/data/samples/HG00097_2.fastq.gz
+```
 
 ## Examples (taken from `run_examples.sh`)
 
@@ -130,27 +160,6 @@ Notes:
 - The `--softlink` (`-sl`) option will still work inside the Docker container. The only caveat is that symlinks created inside the container will not resolve correctly from the host after the container exits.
 - To use multiple CPU threads, ensure your Docker daemon is configured to allow sufficient CPU resources.
 
-## Sample List File Format
-
-The file passed to `-s` must contain accessible paths to paired-end FASTQ files, one per line. Files must follow the naming pattern:
-
-```
-<SAMPLE_NAME>_1.<EXT>
-<SAMPLE_NAME>_2.<EXT>
-```
-
-Where `<EXT>` is one of: `.fastq`, `.fq`, `.fastq.gz`, `.fq.gz`.
-
-Both R1 and R2 files must be present for every sample. The pipeline will raise an error if any pair is incomplete.
-
-Example:
-```
-/data/samples/HG00096_1.fastq.gz
-/data/samples/HG00096_2.fastq.gz
-/data/samples/HG00097_1.fastq.gz
-/data/samples/HG00097_2.fastq.gz
-```
-
 ## Output Directory Structure
 
 <img width="800" height="350" alt="image" src="https://github.com/user-attachments/assets/38e5a96e-2a8c-49be-bc23-f557ea28ded6" />>  <br>
@@ -176,7 +185,7 @@ output_dir/
     `-- variants/  # Variant calling VCF output
 ```
 
-## File Naming Conventions
+### File Naming Conventions
 
 All output files are named using `<species_name>` (from `-sp`) and `<db_name>` (from `-dn` or derived from `-db`).
 
@@ -187,7 +196,9 @@ All output files are named using `<species_name>` (from `-sp`) and `<db_name>` (
 - Quality score file: `module/model/<SAMPLE_NAME>_<DB_NAME>_qs`
 - PseudoDB VCF: `data/db/<SPECIES>_pseudoDB.vcf.gz`
 
-## Softlinking (`-sl`)
+## Other Details
+
+### Softlinking (`-sl`)
 
 By default, all input files (FASTA, database VCF, FASTQ files) are **copied** into the output directory. Passing `-sl` will create **symbolic links** instead, saving disk space and time.
 
@@ -196,7 +207,7 @@ By default, all input files (FASTA, database VCF, FASTQ files) are **copied** in
 - Softlinks point to the original source paths, so moving or deleting the source files after running will break them.
 - **Please be careful with softlinked files — deleting them from the output directory may affect the original source files on some systems.**
 
-## Resumability
+### Resumability
 
 The pipeline is designed to be safely re-run on a partially completed output directory:
 
@@ -205,7 +216,7 @@ The pipeline is designed to be safely re-run on a partially completed output dir
 - **Base recalibration**: per-sample, skipped if `<SAMPLE_NAME>_<DB_NAME>_recalibrated.bam` already exists in `module/machine/`.
 - **Variant calling** and **error rate**: not resumable at the per-sample level, will re-run in full if called.
 
-## Threading and Memory
+### Threading and Memory
 
 The `-t` / `--threads` argument controls the number of CPU threads passed to compatible tools:
 
