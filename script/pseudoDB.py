@@ -224,10 +224,10 @@ def pre_align(fasta_path, gb_memory, use_bwa):
 	print(f"Start indexing...")
 
 	if use_bwa:
-		subprocess.run(f"bwa index {fasta_path}", shell=True, check=True)
+		subprocess.run(f"bwa index {fasta_path} > {fasta_path}.bwa_index.log 2>&1", shell=True, check=True)
 	else:
 		try:
-			subprocess.run(f"bwa-mem2 index {fasta_path}", shell=True, check=True)
+			subprocess.run(f"bwa-mem2 index {fasta_path} > {fasta_path}.bwa-mem2_index.log 2>&1", shell=True, check=True)
 		except subprocess.CalledProcessError as e:
 			print(f"bwa-mem2 failed (return code: {e.returncode}), falling back to bwa")
 
@@ -236,7 +236,7 @@ def pre_align(fasta_path, gb_memory, use_bwa):
 					os.remove(f)
 
 			use_bwa = True
-			subprocess.run(f"bwa index {fasta_path}", shell=True, check=True)
+			subprocess.run(f"bwa index {fasta_path} > {fasta_path}.bwa_index.log 2>&1", shell=True, check=True)
 
 	# 2. samtools faidx
 	fasta_fai_path = f"{fasta_path}.fai"
@@ -291,9 +291,9 @@ def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread, gb_memory, u
 		metrics_txt_path = os.path.join(module_align_dir, f'{sample_name}_metrics.txt')
  
 		if use_bwa:
-			subprocess.run(f"bwa mem -M -t {n_thread} -R '{rg_header}' {fasta_path} {r1} {r2} > {init_sam_path}", shell=True, check=True)
+			subprocess.run(f"bwa mem -M -t {n_thread} -R '{rg_header}' {fasta_path} {r1} {r2} > {init_sam_path} 2>{init_sam_path}.bwa_mem.log", shell=True, check=True)
 		else:
-			subprocess.run(f"bwa-mem2 mem -M -t {n_thread} -R '{rg_header}' {fasta_path} {r1} {r2} > {init_sam_path}", shell=True, check=True)
+			subprocess.run(f"bwa-mem2 mem -M -t {n_thread} -R '{rg_header}' {fasta_path} {r1} {r2} > {init_sam_path} 2>{init_sam_path}.bwa-mem2_mem.log", shell=True, check=True)
 
 		# Mark Duplicate and Sort
 		os.makedirs(tmp_dir, exist_ok = True)
