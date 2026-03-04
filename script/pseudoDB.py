@@ -181,56 +181,79 @@ def set_wd(output_dir_path, sample_paths_file, src_fasta_path, src_database_path
 
 	return sample_dict, fasta_path, db_path
 
-def pre_align(fasta_path, gb_memory):
+def pre_align(fasta_path, gb_memory, use_bwa):
 	"""
 	Generate index files for reference FASTA.
 
 	Arguments:
 	- fasta_path: Path to the usable FASTA file (in data/ref).
 	- gb_memory: Memory limit for picard (GB).
+	- use_bwa: Whether to use BWA (True) or BWA-MEM2 (False).
 	"""
 	
 	ref_folder = os.path.dirname(fasta_path)
 
-	fasta_dict_path = re.sub(r'\.(fa|fna|fasta)(.gz)?$', '.dict', fasta_path)
-	file_exts = [
-		f"{fasta_path}.0123",
-		f"{fasta_path}.amb",
-		f"{fasta_path}.ann",
-		f"{fasta_path}.fai",
-		f"{fasta_path}.bwt.2bit.64",
-		f"{fasta_path}.pac",
-		fasta_dict_path
-	]
+	# 1. bwa-mem2 index
+	if use_bwa:
+		file_exts = [
+			f"{fasta_path}.amb",
+			f"{fasta_path}.ann",
+			f"{fasta_path}.bwt",
+			f"{fasta_path}.pac",
+			f"{fasta_path}.sa"
+		]
+	else:
+		file_exts = [
+			f"{fasta_path}.0123",
+			f"{fasta_path}.amb",
+			f"{fasta_path}.ann",
+			f"{fasta_path}.bwt.2bit.64",
+			f"{fasta_path}.pac"
+		]
 
-	# Check for missing reference index files
+	# Check for missing reference BWA/BWA-MEM2 index files
 	missing_files = [f for f in file_exts if not os.path.exists(f)]
 	if len(missing_files) == 0:
-		print(f"All reference and index files are ready in {ref_folder}.")
-		return
+		print(f"All reference and index files for {'BWA' if use_bwa else 'BWA-MEM2'} are ready in {ref_folder}.")
+		return use_bwa
 
-	# Start indexing if there are missing reference index files
-	print(f"Missing reference index files:")
+	# Start indexing if there are missing reference BWA/BWA-MEM2 index files
+	print(f"Missing reference index files for {'BWA' if use_bwa else 'BWA-MEM2'}:")
 	for f in missing_files:
 		print(f" - {f}")
 	print(f"Start indexing...")
 
-	# 1. delete existing dict file 
+	if use_bwa:
+		subprocess.run(f"bwa index {fasta_path}", shell=True, check=True)
+	else:
+		try:
+			subprocess.run(f"bwa-mem2 index {fasta_path}", shell=True, check=True)
+		except subprocess.CalledProcessError as e:
+			print(f"bwa-mem2 failed (return code: {e.returncode}), falling back to bwa")
+
+			for f in file_exts:
+				if os.path.exists(f):
+					os.remove(f)
+
+			use_bwa = True
+			subprocess.run(f"bwa index {fasta_path}", shell=True, check=True)
+
+	# 2. samtools faidx
+	fasta_fai_path = f"{fasta_path}.fai"
+	if not os.path.exists(fasta_fai_path):
+		subprocess.run(f"samtools faidx {fasta_path}", shell=True, check=True)
+
+	# 3. picard CreateSequenceDictionary
+	fasta_dict_path = re.sub(r'\.(fa|fna|fasta)(.gz)?$', '.dict', fasta_path)
 	if os.path.exists(fasta_dict_path):
 		os.remove(fasta_dict_path)
-
-	# 2. bwa-mem2 index
-	subprocess.run(f"bwa-mem2 index {fasta_path}", shell=True, check=True)
-
-	# 3. samtools faidx
-	subprocess.run(f"samtools faidx {fasta_path}", shell=True, check=True)
-
-	# 4. picard CreateSequenceDictionary
 	subprocess.run(f"picard -Xmx{gb_memory}g CreateSequenceDictionary R={fasta_path} O={fasta_dict_path}", shell=True, check=True)
 
 	print("Reference preprocessing completed successfully.")
 
-def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread, gb_memory):
+	return use_bwa
+
+def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread, gb_memory, use_bwa):
 	"""
 	Align FASTQ file of single samples to the reference.
 
@@ -240,9 +263,16 @@ def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread, gb_memory):
 	- output_dir_path: Path for root output directory.
 	- n_thread: Number of threads passed to BWA MEM.
 	- gb_memory: Memory limit for picard (GB).
+	- use_bwa: Whether to use BWA (True) or BWA-MEM2 (False).
 	"""
 
 	module_align_dir = os.path.join(output_dir_path, "module", "align")
+
+	use_bwa = pre_align(
+		fasta_path = fasta_path,
+		gb_memory = gb_memory,
+		use_bwa = use_bwa
+	)
 
 	for sample_name, reads_set in sample_dict.items():
 		if os.path.exists(os.path.join(module_align_dir, f"{sample_name}_aligned.bam")):
@@ -260,7 +290,10 @@ def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread, gb_memory):
 		aligned_bam_path = os.path.join(module_align_dir, f'{sample_name}_aligned.bam')
 		metrics_txt_path = os.path.join(module_align_dir, f'{sample_name}_metrics.txt')
  
-		subprocess.run(f"bwa-mem2 mem -M -t {n_thread} -R '{rg_header}' {fasta_path} {r1} {r2} > {init_sam_path}", shell=True, check=True)
+		if use_bwa:
+			subprocess.run(f"bwa mem -M -t {n_thread} -R '{rg_header}' {fasta_path} {r1} {r2} > {init_sam_path}", shell=True, check=True)
+		else:
+			subprocess.run(f"bwa-mem2 mem -M -t {n_thread} -R '{rg_header}' {fasta_path} {r1} {r2} > {init_sam_path}", shell=True, check=True)
 
 		# Mark Duplicate and Sort
 		os.makedirs(tmp_dir, exist_ok = True)
@@ -276,6 +309,8 @@ def align_fastq(sample_dict, fasta_path, output_dir_path, n_thread, gb_memory):
 
 		if os.path.exists(metrics_txt_path):
 			os.remove(metrics_txt_path)
+
+		return use_bwa
 
 def pseudo_db(species_name, sample_list, fasta_path, output_dir_path, n_thread, gb_memory):
 	"""
@@ -653,7 +688,7 @@ def qs_model(sample_list, db_name, output_dir_path):
 
 	return module_model_dir
 
-def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_database_path, db_name, n_thread, gb_memory, softlink):
+def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_database_path, db_name, n_thread, gb_memory, softlink, use_bwa):
 	sample_dict, fasta_path, db_path = set_wd(
 											output_dir_path = output_dir_path,
 											sample_paths_file = sample_paths_file,
@@ -663,16 +698,13 @@ def main(species_name, src_fasta_path, sample_paths_file, output_dir_path, src_d
 										)
 	sample_list = list(sample_dict.keys())
 
-	pre_align(
-		fasta_path = fasta_path,
-		gb_memory = gb_memory
-	)
-	align_fastq(
+	use_bwa = align_fastq(
 		sample_dict = sample_dict,
 		fasta_path = fasta_path,
 		output_dir_path = output_dir_path,
 		n_thread = n_thread,
-		gb_memory = gb_memory
+		gb_memory = gb_memory,
+		use_bwa = use_bwa
 	)
 	
 	if src_database_path is None:
@@ -736,6 +768,7 @@ if __name__ == "__main__":
 	parser.add_argument("-t",  "--threads",			default=THREAD_LIMIT_N,		type=int,	help=f"Number of CPU threads to pass to BWA MEM and GATK 3 (default: {THREAD_LIMIT_N}).")
 	parser.add_argument("-m",  "--memory",			default=MEMORY_LIMIT_GB,	type=int,	help=f"Memory limit in GB to pass to GATK 3 and Picard (default: {MEMORY_LIMIT_GB}).")
 	parser.add_argument("-sl", "--softlink",		action="store_true",					help=f"Create softlinks instead of copying source input files into output directory.")
+	parser.add_argument(       "--use-bwa",			action="store_true",					help=f"Use BWA instead of BWA-MEM2. Takes more time, but consumes less memory. Automatically activated if BWA-MEM2 runs into an error.")
 	args = parser.parse_args()
 
 	main(
@@ -747,5 +780,6 @@ if __name__ == "__main__":
 		db_name = args.database_name,
 		n_thread = args.threads,
 		gb_memory = args.memory,
-		softlink = args.softlink
+		softlink = args.softlink,
+		use_bwa = args.use_bwa
 	)
