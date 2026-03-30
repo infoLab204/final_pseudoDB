@@ -106,7 +106,7 @@ def build_vcf_index(vcf_path):
 	Arguments:
 	- vcf_path: Path to VCF file to index.
 	"""
-	subprocess.run(f"tabix -p vcf {vcf_path}", shell=True, check=True)
+	subprocess.run(f"tabix -fp vcf {vcf_path}", shell=True, check=True)
 
 def set_wd(output_dir_path, sample_paths_file, src_fasta_path, src_database_path = None, softlink = False):
 	"""
@@ -618,7 +618,9 @@ def error_rate(species_name, sample_list, fasta_path, db_name, db_path, output_d
 	if db_uniq_check is not None:
 		os.remove(db_uniq_check)
 
-	# os.remove(f"{species}/data/db/{species_name}_{dbtype}.vcf") # Maybe don't delete the VCF file?
+	# Only remove VCF if a zipped version exists.
+	if os.path.isfile(f"{db_path}.gz"):
+		os.remove(db_path)
 
 	return module_error_dir
 

@@ -12,6 +12,27 @@ For inquiries regarding analytical methods, results, or technical support, pleas
 -	**Dr. Sunhee Kim** (king@kongju.ac.kr)    
 *Kongju National University, South Korea*
 
+### Content List
+- [Requirements](#requirements)
+  - [Software](#software)
+  - [Recommended computing system](#recommended-computing-system)
+- [Installation](#installation)
+  - [Conda](#conda)
+  - [Docker](#docker)
+- [Usage](#usage)
+  - [Required Arguments](#required-arguments)
+  - [Optional Arguments](#optional-arguments)
+  - [Sample List File Format](#sample-list-file-format)
+- [Examples](#examples-taken-from-run_examplessh)
+- [Output Directory Structure](#output-directory-structure)
+  - [File Naming Conventions](#file-naming-conventions)
+- [Other Details](#other-details)
+  - [Threading and Memory](#threading-and-memory)
+  - [Using BWA instead of BWA-MEM2](#using-bwa-instead-of-bwa-mem2)
+  - [Softlinking (-sl)](#softlinking--sl)
+  - [Resumability](#resumability)
+- [Links to Example Datasets](#links-to-dataset-examples)
+
 ## Requirements
 
 ### Software
@@ -123,7 +144,7 @@ Example:
 
 ## Examples (taken from `run_examples.sh`)
 
-This sections shows examples with a small human chromosome 22 dataset provided in [example_data/](./example_data).
+This section shows examples with a small human chromosome 22 dataset provided in [example_data/](./example_data).
 
 **Construct a pseudo-database:**
 ```bash
